@@ -5,12 +5,12 @@ import os
 from dotenv import load_dotenv
 import requests
 
-# Load environment variables
+# Load environment variables from .env file (for local development)
 load_dotenv()
 
 app = Flask(__name__)
 
-# Send email using SendGrid API (SSL verify disabled for local testing)
+# Function to send email using SendGrid API
 def send_email(subject, body):
     try:
         url = "https://api.sendgrid.com/v3/mail/send"
@@ -19,12 +19,14 @@ def send_email(subject, body):
             "Content-Type": "application/json"
         }
         data = {
-            "personalizations": [{"to": [{"email": "hasan.mohsin4477@gmail.com"}]}],
+            "personalizations": [{
+                "to": [{"email": "hasan.mohsin4477@gmail.com"}]
+            }],
             "from": {"email": os.environ.get('SENDGRID_SENDER')},
             "subject": subject,
             "content": [{"type": "text/plain", "value": body}]
         }
-        response = requests.post(url, headers=headers, json=data, verify=False)  # Disable SSL check
+        response = requests.post(url, headers=headers, json=data)
         print(f"✅ Email sent! Status: {response.status_code}, Response: {response.text}")
     except Exception as e:
         print("❌ Email sending failed:")
