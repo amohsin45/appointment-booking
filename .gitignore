@@ -1,0 +1,48 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Flask instance folder
+instance/
+
+# Database files (if added later)
+*.db
+*.sqlite3
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# VS Code settings
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# Images (optional: ignore uploaded images if not needed in repo)
+*.jpeg
+*.jpg
+*.png
+
+# Cache
+.cache/
+
+# Render/Heroku specific
+*.render.yaml
+Procfile

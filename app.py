@@ -2,6 +2,11 @@ from flask import Flask, render_template, request
 from flask_mail import Mail, Message
 from threading import Thread
 import traceback
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env (for local development)
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -9,9 +14,9 @@ app = Flask(__name__)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'hasan.mohsin4477@gmail.com'
-app.config['MAIL_PASSWORD'] = 'jont ubti jqjh msnp'  # Gmail App Password
-app.config['MAIL_DEFAULT_SENDER'] = 'hasan.mohsin4477@gmail.com'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')  # Gmail App Password
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_TIMEOUT'] = 10  # Prevent hanging (10 seconds)
 
 mail = Mail(app)
