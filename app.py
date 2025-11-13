@@ -36,7 +36,7 @@ def send_email(subject, body):
         }
         data = {
             "personalizations": [{
-                "to": [{"email": "hasan.mohsin4477@gmail.com"}]
+                "to": [{"email": "hasan.mohsin4477@gmail.com"}]  # Admin email
             }],
             "from": {"email": os.environ.get('SENDGRID_SENDER')},
             "subject": subject,
