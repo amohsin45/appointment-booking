@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import requests
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate  # ✅ Added for migrations
 
 # Load environment variables
 load_dotenv()
@@ -17,9 +18,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')  # Render
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# ✅ Ensure tables exist even on Render
-with app.app_context():
-    db.create_all()  # Creates table if not exists
+# ✅ Initialize Flask-Migrate
+migrate = Migrate(app, db)
 
 # Appointment Model
 class Appointment(db.Model):
