@@ -10,12 +10,16 @@ from flask_sqlalchemy import SQLAlchemy
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "fallback_secret_key")
+app.secret_key = "your_secret_key"
 
 # PostgreSQL Database Config
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')  # Render provides this
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# ✅ Ensure tables exist even on Render
+with app.app_context():
+    db.create_all()  # Creates table if not exists
 
 # Appointment Model
 class Appointment(db.Model):
@@ -36,7 +40,7 @@ def send_email(subject, body):
         }
         data = {
             "personalizations": [{
-                "to": [{"email": os.environ.get('SENDGRID_RECEIVER', 'hasan.mohsin4477@gmail.com')}]
+                "to": [{"email": "hasan.mohsin4477@gmail.com"}]  # Admin email
             }],
             "from": {"email": os.environ.get('SENDGRID_SENDER')},
             "subject": subject,
@@ -75,13 +79,13 @@ def appointment():
         time = request.form.get('time')
         service = request.form.get('service')
 
-        # Check if slot is already booked
+        # ✅ Check if slot is already booked
         existing = Appointment.query.filter_by(date=date, time=time).first()
         if existing:
-            flash("❌ This time slot is already booked. Please.")
+            flash("❌ This time slot is already booked. Please choose another.")
             return render_template('appointment.html')
 
-        # Save appointment
+        # ✅ Save appointment
         new_appointment = Appointment(name=name, email=email, date=date, time=time, service=service)
         db.session.add(new_appointment)
         db.session.commit()
@@ -96,12 +100,9 @@ Service: {service}
 Date: {date}
 Time: {time}
 """
-
         Thread(target=send_email, args=(subject, body)).start()
-        return render_template('appointmentconfirm.html', name=name, date=date, time=time, service=service)
+        return render_template('appointment_confirm.html', name=name, date=date, time=time, service=service)
     return render_template('appointment.html')
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True, port=5001)
