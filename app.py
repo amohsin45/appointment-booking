@@ -10,10 +10,10 @@ from flask_sqlalchemy import SQLAlchemy
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.secret_key = os.getenv("SECRET_KEY", "fallback_secret_key")
 
 # PostgreSQL Database Config
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')  
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -36,7 +36,7 @@ def send_email(subject, body):
         }
         data = {
             "personalizations": [{
-                "to": [{"email": "hasan.mohsin4477@gmail.com"}]
+                "to": [{"email": os.environ.get('SENDGRID_RECEIVER', 'hasan.mohsin4477@gmail.com')}]
             }],
             "from": {"email": os.environ.get('SENDGRID_SENDER')},
             "subject": subject,
@@ -78,7 +78,7 @@ def appointment():
         # Check if slot is already booked
         existing = Appointment.query.filter_by(date=date, time=time).first()
         if existing:
-            flash("❌ This time slot is already booked. Please choose another.")
+            flash("❌ This time slot is already booked. Please.")
             return render_template('appointment.html')
 
         # Save appointment
@@ -98,7 +98,7 @@ Time: {time}
 """
 
         Thread(target=send_email, args=(subject, body)).start()
-        return render_template('appointment_confirm.html', name=name, date=date, time=time, service=service)
+        return render_template('appointmentconfirm.html', name=name, date=date, time=time, service=service)
     return render_template('appointment.html')
 
 if __name__ == '__main__':
