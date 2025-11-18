@@ -13,9 +13,7 @@ app = Flask(__name__)
 app.secret_key = "your_secret_key"
 
 # PostgreSQL Database Config
-# IMPORTANT: Use psycopg3 driver in DATABASE_URL for Python 3.13 compatibility
-# Example: postgresql+psycopg://username:password@host:port/dbname
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')  # Use psycopg3 driver in DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -28,8 +26,6 @@ class Appointment(db.Model):
     time = db.Column(db.String(20), nullable=False)
     service = db.Column(db.String(50), nullable=False)
 
-    __table_args__ = (db.UniqueConstraint('date', 'time', name='unique_date_time'),)
-
 # Function to send email using SendGrid API
 def send_email(subject, body):
     try:
@@ -40,7 +36,7 @@ def send_email(subject, body):
         }
         data = {
             "personalizations": [{
-                "to": [{"email": "hasan.mohsin4477@gmail.com"}]  # Admin email
+                "to": [{"email": "hasan.mohsin4477@gmail.com"}]
             }],
             "from": {"email": os.environ.get('SENDGRID_SENDER')},
             "subject": subject,
@@ -100,11 +96,12 @@ Service: {service}
 Date: {date}
 Time: {time}
 """
+
         Thread(target=send_email, args=(subject, body)).start()
         return render_template('appointment_confirm.html', name=name, date=date, time=time, service=service)
     return render_template('appointment.html')
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()  # Creates table if not exists
+        db.create_all()
     app.run(debug=True, port=5001)
