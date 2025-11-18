@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = "your_secret_key"
 
 # PostgreSQL Database Config
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')  # Use psycopg3 driver in DATABASE_URL
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
