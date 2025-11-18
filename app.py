@@ -13,7 +13,9 @@ app = Flask(__name__)
 app.secret_key = "your_secret_key"
 
 # PostgreSQL Database Config
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')  # Render provides this
+# IMPORTANT: Use psycopg3 driver in DATABASE_URL for Python 3.13 compatibility
+# Example: postgresql+psycopg://username:password@host:port/dbname
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -25,6 +27,8 @@ class Appointment(db.Model):
     date = db.Column(db.String(20), nullable=False)
     time = db.Column(db.String(20), nullable=False)
     service = db.Column(db.String(50), nullable=False)
+
+    __table_args__ = (db.UniqueConstraint('date', 'time', name='unique_date_time'),)
 
 # Function to send email using SendGrid API
 def send_email(subject, body):
