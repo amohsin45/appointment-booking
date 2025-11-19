@@ -5,23 +5,24 @@ import os
 from dotenv import load_dotenv
 import requests
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate  # ✅ Added for migrations
+from flask_migrate import Migrate
+from sqlalchemy.exc import IntegrityError
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.secret_key = os.environ.get('SECRET_KEY', 'your_secret_key')
 
 # PostgreSQL Database Config
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')  # Render provides this
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# ✅ Initialize Flask-Migrate
+# Initialize Flask-Migrate
 migrate = Migrate(app, db)
 
-# Appointment Model
+# Appointment Model with Unique Constraint
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -29,6 +30,10 @@ class Appointment(db.Model):
     date = db.Column(db.String(20), nullable=False)
     time = db.Column(db.String(20), nullable=False)
     service = db.Column(db.String(50), nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint('date', 'time', name='unique_date_time'),
+    )
 
 # Function to send email using SendGrid API
 def send_email(subject, body):
@@ -79,16 +84,21 @@ def appointment():
         time = request.form.get('time')
         service = request.form.get('service')
 
-        # ✅ Check if slot is already booked
+        # Check if slot is already booked
         existing = Appointment.query.filter_by(date=date, time=time).first()
         if existing:
             flash("❌ This time slot is already booked. Please choose another.")
             return render_template('appointment.html')
 
-        # ✅ Save appointment
+        # Save appointment
         new_appointment = Appointment(name=name, email=email, date=date, time=time, service=service)
-        db.session.add(new_appointment)
-        db.session.commit()
+        try:
+            db.session.add(new_appointment)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash("❌ This time slot was just booked by someone else. Please choose another.")
+            return render_template('appointment.html')
 
         subject = f"New Appointment Booking from {name}"
         body = f"""
