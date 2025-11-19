@@ -14,19 +14,27 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your_secret_key')
 
-# PostgreSQL Database Config (Render requires SSL)
+# Database configuration
 db_url = os.environ.get('DATABASE_URL')
-if db_url and 'sslmode' not in db_url:
-    db_url += '?sslmode=require'
+
+# Handle SSL for Render (production) but not for local
+if db_url:
+    if 'localhost' in db_url or '127.0.0.1' in db_url:
+        # Local DB: remove sslmode if present
+        db_url = db_url.replace('?sslmode=require', '')
+    else:
+        # Render DB: ensure sslmode=require
+        if 'sslmode' not in db_url:
+            db_url += '?sslmode=require'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 
-# Initialize Flask-Migrate
+# Initialize DB and migrations
+db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Appointment Model with Unique Constraint
+# Appointment model
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -39,7 +47,7 @@ class Appointment(db.Model):
         db.UniqueConstraint('date', 'time', name='unique_date_time'),
     )
 
-# Function to send email using SendGrid API
+# Send email using SendGrid
 def send_email(subject, body):
     try:
         url = "https://api.sendgrid.com/v3/mail/send"

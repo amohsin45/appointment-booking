@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: hm-financial-group
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --workers 3 --threads 2 --timeout 120"
+    plan: free
+    region: oregon
+    postDeployCommand: "flask db upgrade"
+    envVars:
+      - key: SECRET_KEY
+        value: ${SECRET_KEY}
+      - key: SENDGRID_API_KEY
+        value: ${SENDGRID_API_KEY}
+      - key: SENDGRID_SENDER
+        value: ${SENDGRID_SENDER}
+      - key: DATABASE_URL
+        value: ${DATABASE_URL}
