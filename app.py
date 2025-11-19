@@ -20,10 +20,8 @@ db_url = os.environ.get('DATABASE_URL')
 # Handle SSL for Render (production) but not for local
 if db_url:
     if 'localhost' in db_url or '127.0.0.1' in db_url:
-        # Local DB: remove sslmode if present
         db_url = db_url.replace('?sslmode=require', '')
     else:
-        # Render DB: ensure sslmode=require
         if 'sslmode' not in db_url:
             db_url += '?sslmode=require'
 
@@ -33,10 +31,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize DB and migrations
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
-# ✅ Auto-create tables if they don't exist
-with app.app_context():
-    db.create_all()
 
 # Appointment model
 class Appointment(db.Model):
@@ -50,6 +44,11 @@ class Appointment(db.Model):
     __table_args__ = (
         db.UniqueConstraint('date', 'time', name='unique_date_time'),
     )
+
+# ✅ Ensure tables exist before first request
+@app.before_first_request
+def initialize_database():
+    db.create_all()
 
 # Send email using SendGrid
 def send_email(subject, body):
@@ -69,7 +68,7 @@ def send_email(subject, body):
         }
         response = requests.post(url, headers=headers, json=data)
         print(f"✅ Email sent! Status: {response.status_code}, Response: {response.text}")
-    except Exception as e:
+    except Exception:
         print("❌ Email sending failed:")
         traceback.print_exc()
 
@@ -100,12 +99,6 @@ def appointment():
         time = request.form.get('time')
         service = request.form.get('service')
 
-        # Check if slot is already booked
-        existing = Appointment.query.filter_by(date=date, time=time).first()
-        if existing:
-            flash("❌ This time slot is already booked. Please choose another.")
-            return render_template('appointment.html')
-
         # Save appointment
         new_appointment = Appointment(name=name, email=email, date=date, time=time, service=service)
         try:
@@ -131,5 +124,4 @@ Time: {time}
     return render_template('appointment.html')
 
 if __name__ == '__main__':
-    # For Render, use host 0.0.0.0 and dynamic port
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

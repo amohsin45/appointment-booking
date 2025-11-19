@@ -2,11 +2,20 @@ services:
   - type: web
     name: hm-financial-group
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app --workers 3 --threads 2 --timeout 120"
     plan: free
     region: oregon
-    postDeployCommand: "flask db upgrade"
+
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+    startCommand: |
+      gunicorn app:app --workers 3 --threads 2 --timeout 120
+
+    # ✅ Ensure tables exist after deployment
+    postDeployCommand: |
+      flask shell -c "from app import db; db.create_all()"
+
     envVars:
       - key: SECRET_KEY
         value: ${SECRET_KEY}
