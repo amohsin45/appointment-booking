@@ -91,7 +91,7 @@ def appointment():
         # Check if slot is already booked
         existing = Appointment.query.filter_by(date=date, time=time).first()
         if existing:
-            flash("❌ This time slot is already booked Please choose another.")
+            flash("❌ This time slot is already booked. Please choose another.")
             return render_template('appointment.html')
 
         # Save appointment
