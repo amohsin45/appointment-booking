@@ -34,6 +34,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+# ✅ Auto-create tables if they don't exist
+with app.app_context():
+    db.create_all()
+
 # Appointment model
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
