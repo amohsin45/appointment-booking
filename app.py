@@ -14,8 +14,12 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your_secret_key')
 
-# PostgreSQL Database Config
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')  # Render provides this
+# PostgreSQL Database Config (Render requires SSL)
+db_url = os.environ.get('DATABASE_URL')
+if db_url and 'sslmode' not in db_url:
+    db_url += '?sslmode=require'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -87,7 +91,7 @@ def appointment():
         # Check if slot is already booked
         existing = Appointment.query.filter_by(date=date, time=time).first()
         if existing:
-            flash("❌ This time slot is already booked. Please choose another.")
+            flash("❌ This time slot is already booked Please choose another.")
             return render_template('appointment.html')
 
         # Save appointment
@@ -115,4 +119,5 @@ Time: {time}
     return render_template('appointment.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    # For Render, use host 0.0.0.0 and dynamic port
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
